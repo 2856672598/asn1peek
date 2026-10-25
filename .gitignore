@@ -1,0 +1,28 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# 构建产物
+build/
+dist/
+*.spec
+*.whl
+*.tar.gz
+*.AppImage
+
+# 打包工具（构建时下载到本地）
+tools/bin/
+
+# 本地设计/开发文档：保留在工作区，不随开源仓库发布
+/docs/
+
+# 系统/编辑器
+.DS_Store
+.idea/
+.vscode/

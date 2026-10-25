@@ -1,0 +1,15 @@
+#!/bin/bash
+# AppImage 内部启动器（打包时放到 AppDir/AppRun）。
+# 保证 Qt/GTK 插件等在便携目录内解析，且 Wayland/X11 均可用。
+SELF="$(readlink -f "$0")"
+HERE="${SELF%/*}"
+export APPDIR="$HERE"          # appimagetool 约定
+BIN="$HERE/usr/bin/asn1peek"
+
+export QT_QPA_PLATFORMTHEME=""       # 跟随系统
+export QT_PLUGIN_PATH="$HERE/usr/opt/asn1peek/PySide6/QtCore/../../../Qt/plugins"
+# PyInstaller onedir 里 Qt 插件实际位于 asn1peek/Qt/plugins
+[[ -d "$HERE/usr/opt/asn1peek/Qt/plugins" ]] && \
+  export QT_PLUGIN_PATH="$HERE/usr/opt/asn1peek/Qt/plugins"
+
+exec "$BIN" "$@"

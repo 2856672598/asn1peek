@@ -1,0 +1,102 @@
+[project]
+name = "asn1peek"
+version = "0.1.0"
+description = "Desktop ASN.1 viewer for Linux with synchronized tree and hex views"
+readme = "README.md"
+requires-python = ">=3.11"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [
+    { name = "asn1peek contributors" },
+]
+keywords = [
+    "asn1",
+    "ber",
+    "der",
+    "pem",
+    "pki",
+    "x509",
+    "certificate",
+    "pkcs7",
+    "qt",
+    "pyside6",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Environment :: X11 Applications :: Qt",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Information Technology",
+    "Intended Audience :: System Administrators",
+    "Operating System :: POSIX :: Linux",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
+    "Topic :: Security :: Cryptography",
+    "Topic :: Utilities",
+    "Typing :: Typed",
+]
+dependencies = [
+    # Qt for Python 的 Essentials 子集：QtCore/QtGui/QtWidgets 等，
+    # 不含 WebEngine/Addons（体积更小）。许可证为 LGPLv3（动态链接）。
+    "pyside6-essentials>=6.7",
+]
+
+[project.scripts]
+asn1peek = "asn1peek.app:main"
+
+[dependency-groups]
+dev = [
+    "pytest>=8",
+    "ruff>=0.6",
+]
+build = [
+    # AppImage 出包用；uv sync --group build
+    "pyinstaller>=6",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/asn1peek"]
+
+[tool.hatch.build.targets.sdist]
+# 显式列出发布内容，避免把 build/、dist/、.venv/、tools/bin/ 等本地生成物
+# 打进 sdist。
+include = [
+    "/src",
+    "/tests",
+    "/samples",
+    "/scripts",
+    "/packaging",
+    "/tools/build_oids.py",
+    "/assets",
+    "/README.md",
+    "/LICENSE",
+    "/pyproject.toml",
+    "/uv.lock",
+]
+exclude = [
+    "**/__pycache__",
+    "**/*.pyc",
+    "**/*.pyo",
+    "**/.DS_Store",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+extend-exclude = [".venv", "build", "dist", "samples", "tools/bin"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP", "B"]
+ignore = ["E501"]  # 长中文注释与既有 UI 文案较多，行宽不作为硬性门禁
+
+[tool.ruff.lint.per-file-ignores]
+"tests/*" = ["B011"]  # 测试中允许 assert False 类写法

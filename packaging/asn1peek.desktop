@@ -1,0 +1,15 @@
+[Desktop Entry]
+Type=Application
+Name=asn1peek
+GenericName=ASN.1 数据查看器
+GenericName[en]=ASN.1 Data Viewer
+Comment=以树状结构与 Hex 联动查看 DER/PEM/p7b 等 ASN.1 数据
+Comment[en]=Inspect ASN.1 data (DER/PEM/p7b) with a tree + hex sync view
+Exec=asn1peek %f
+TryExec=asn1peek
+Icon=asn1peek
+Terminal=false
+Categories=Development;Utility;
+Keywords=ASN.1;DER;PEM;BER;X.509;certificate;PKCS7;
+MimeType=application/pkix-cert;application/x-x509-ca-cert;application/pkcs8;application/pkcs10;application/pkcs7-mime;application/x-pem-file;application/pkix-crl;application/x-der-file;
+StartupWMClass=asn1peek
