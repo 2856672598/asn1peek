@@ -34,6 +34,7 @@ INSTALLED_SIZE="$(du -sk "$ROOT/opt" "$ROOT/usr" | awk '{sum += $1} END {print s
 LIBSTDCXX_MAJOR="$(dpkg-query -W -f='${Version}' libstdc++6 | sed -E 's/^[0-9]+://; s/^([0-9]+).*/\1/')"
 cat > "$ROOT/DEBIAN/control" <<CONTROL
 Package: asn1peek
+Maintainer: asn1peek contributors
 Version: ${VERSION}
 Architecture: ${ARCH}
 Section: utils
