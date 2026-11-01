@@ -3,8 +3,6 @@ name: Linux release
 on:
   pull_request:
   push:
-    branches: ["**"]
-    tags: ["v*"]
 
 permissions:
   contents: read
