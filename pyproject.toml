@@ -3,7 +3,7 @@ name = "asn1peek"
 version = "0.1.0"
 description = "Desktop ASN.1 viewer for Linux with synchronized tree and hex views"
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.11,<3.14"
 license = "MIT"
 license-files = ["LICENSE"]
 authors = [
@@ -32,7 +32,6 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
-    "Programming Language :: Python :: 3.14",
     "Topic :: Security :: Cryptography",
     "Topic :: Utilities",
     "Typing :: Typed",
@@ -40,7 +39,11 @@ classifiers = [
 dependencies = [
     # Qt for Python 的 Essentials 子集：QtCore/QtGui/QtWidgets 等，
     # 不含 WebEngine/Addons（体积更小）。许可证为 LGPLv3（动态链接）。
-    "pyside6-essentials>=6.7",
+    #
+    # 版本锁定原因：6.8.0.2 是 aarch64 wheel 仍为 manylinux_2_31 的最后一个版本，
+    # 因此可在 Ubuntu 22.04（glibc 2.35）上同时支持 amd64 与 arm64。
+    # 6.8.1 起 aarch64 跳到 manylinux_2_39，需 Ubuntu 24.04+；6.10 起 x86_64 也到 2_34。
+    "pyside6-essentials==6.8.0.2",
 ]
 
 [project.scripts]
