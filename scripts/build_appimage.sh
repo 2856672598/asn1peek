@@ -9,30 +9,19 @@
 # 依赖：
 #   - uv（或 pip）与项目 dev 依赖（pyinstaller 在 build 组内）
 #   - appimagetool 与 type2 运行时（缺失时自动下载到 tools/bin/，需联网）
-#   - GLIBC 基线（兼容 Ubuntu 22.04 = glibc 2.35）：
-#     请勿用发行版系统 Python 打包——其 libpython 可能要求更高 GLIBC
-#     （如 Ubuntu 26.04 系统 3.14 需 2.38）。建议用 uv 管理的
-#     python-build-standalone 3.13（GLIBC ≤ 2.17）：
-#       uv python install 3.13
-#       UV_PROJECT_ENVIRONMENT=build/.venv-pbs313 uv sync --python 3.13 --group build
-#       UV_PROJECT_ENVIRONMENT=build/.venv-pbs313 bash scripts/build_appimage.sh
-#     脚本在打包前对产物做 GLIBC 符号自检（超基线仅警告，见输出）。
-#   - 发行推荐直接运行 22.04 基线构建（自动使用 jammy 无根 chroot）：
-#       bash scripts/build_appimage_jammy.sh
+#   - 必须在 GLIBC ≤ 2.35 的 Ubuntu 22.04 环境里执行。PyInstaller 会收集宿主
+#     的 libpython、libstdc++ 等系统库；只切换到旧 Python 不足以降低 GLIBC。
+#     推荐通过 bwrap Jammy 环境构建：bash scripts/build_appimage_jammy.sh
 set -euo pipefail
 cd "$(dirname "$0")/.."
 
-VERSION="$(uv run python -c 'from importlib.metadata import version; print(version("asn1peek"))' 2>/dev/null || uv run python -c 'import asn1peek; print(asn1peek.__version__)')"
+VERSION="$(uv run --frozen --no-sync python -c 'from asn1peek import __version__; print(__version__)')"
 ARCH="$(uname -m)"
 ROOT="$PWD"
 APPDIR="build/appimage/AppDir"
 OUT="dist"
 
-# ---- 依赖检查 -----------------------------------------------------------
-if ! uv run python -c 'import PyInstaller' 2>/dev/null; then
-  echo "[..] 安装 PyInstaller（已加入 build 依赖组）"
-  uv sync --group build 1>&2
-fi
+# PyInstaller 依赖与 bundle 构建统一由 scripts/build_bundle.sh 负责。
 
 APPIMAGETOOL="tools/bin/appimagetool"
 if [[ ! -x "$APPIMAGETOOL" ]]; then
@@ -57,25 +46,10 @@ if [[ ! -f "$RUNTIME" ]]; then
     || { rm -f "$RUNTIME.tmp"; echo "[!] 运行时下载失败：appimagetool 将尝试自行获取（易受网络抖动影响）"; }
 fi
 
-# ---- PyInstaller onedir -------------------------------------------------
-# 注意：入口用 packaging/launcher.py（app.py 含相对导入，不能直接作脚本入口）；
-# 显式 --distpath 使产物落在 build/pyinstaller/asn1peek/（PyInstaller 6 布局：
-# 可执行文件 + _internal/）。
-rm -rf build/pyinstaller "$APPDIR"
-uv run pyinstaller \
-  --noconfirm --clean \
-  --name asn1peek \
-  --distpath build/pyinstaller \
-  --workpath build/pyinstaller/_work \
-  --paths src \
-  --hidden-import asn1peek \
-  --collect-submodules asn1peek \
-  --add-data "src/asn1peek/core/data/oid_dumpasn1.json:asn1peek/core/data" \
-  packaging/launcher.py 1>&2
-
-# 不指定 --specpath，避免相对 --add-data 路径解析异常；
-# 构建完成后删除自动生成的 spec 文件。
-rm -f asn1peek.spec
+# ---- PyInstaller onedir（与 deb 共用）-----------------------------------
+# bundle 的清理与重建由 build_bundle.sh 独占；本脚本只负责清理 AppDir。
+rm -rf "$APPDIR"
+bash scripts/build_bundle.sh
 
 # ---- 组装 AppDir --------------------------------------------------------
 STAGE="$APPDIR/usr/opt/asn1peek"
@@ -109,7 +83,7 @@ else
   IFS=. read -r gmaj gmin <<< "$GLIBC_MAX"
   if (( gmaj > 2 || (gmaj == 2 && gmin > 35) )); then
     echo "[警告] 产物所需最高 GLIBC 符号为 $GLIBC_MAX（超过 Ubuntu 22.04 的 2.35）——"
-    echo "        请改用 uv 管理的 python-build-standalone 重建（见脚本头部说明）。"
+    echo "        请在 Ubuntu 22.04 / Jammy 构建环境内重建（见脚本头部说明）。"
   else
     echo "[ok] GLIBC 基线自检通过：最高符号 $GLIBC_MAX ≤ 2.35（Ubuntu 22.04+ 可运行）"
   fi

@@ -229,11 +229,14 @@ class TestMainWindowWiring:
         window.open_file(str(leaf))
         qapp.processEvents()
 
-        view_menu = next(
-            action.menu()
-            for action in window.menuBar().actions()
-            if action.menu() is not None and action.text().startswith("视图")
-        )
+        # PySide6 6.8/6.9 下 QAction.menu() 返回的 QMenu 包装器依赖 QAction 存活。
+        # 生成器表达式会让临时 QAction 包装器被回收，进而把 QMenu 一起删掉
+        # （RuntimeError: Internal C++ object (QMenu) already deleted）。
+        # 先持有菜单栏 action 列表，再取 menu()。
+        menu_actions = window.menuBar().actions()
+        view_action = next(a for a in menu_actions if a.text().startswith("视图"))
+        view_menu = view_action.menu()
+        assert view_menu is not None
         action = next(a for a in view_menu.actions() if "连接线" in a.text())
         assert action.isChecked()
         action.trigger()
